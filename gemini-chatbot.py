@@ -33,6 +33,15 @@ client = genai.Client()
 
 
 def generate_response(user_input):
+    """
+    Generates a response from the Gemini model based on user input.
+
+    Args:
+        user_input (str): The input text provided by the user.
+
+    Returns:
+        str: The generated text response from the Gemini model.
+    """
     response = client.models.generate_content(
         model=model,
         contents=user_input,
