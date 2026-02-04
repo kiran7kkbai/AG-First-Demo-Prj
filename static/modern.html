@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Modern Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding: 40px 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card h2 svg {
+            width: 24px;
+            height: 24px;
+            color: var(--primary);
+        }
+
+        .control-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .result-area {
+            margin-top: auto;
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            min-height: 80px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .result-area.empty {
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-style: italic;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-get { background-color: #dbeafe; color: #1e40af; }
+        .badge-post { background-color: #d1fae5; color: #065f46; }
+
+        /* Animation for loading */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>API Dashboard</h1>
+            <p>Interactive playground for your FastAPI endpoints</p>
+        </header>
+
+        <div class="grid">
+            <!-- Card 1: Hello World -->
+            <div class="card">
+                <h2>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Basic Health Check
+                    <span class="badge badge-get" style="margin-left: auto;">GET</span>
+                </h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Simple endpoint to verify server connectivity.</p>
+                <div class="control-group">
+                    <button onclick="getHello(this)">
+                        <span>Ping Server</span>
+                    </button>
+                </div>
+                <div id="hello-result" class="result-area empty">Waiting for action...</div>
+            </div>
+
+            <!-- Card 2: Item Fetcher -->
+            <div class="card">
+                <h2>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    Item Fetcher
+                    <span class="badge badge-get" style="margin-left: auto;">GET</span>
+                </h2>
+                <div class="control-group">
+                    <label>Item ID</label>
+                    <input type="number" id="itemId" placeholder="e.g. 42" value="1">
+                </div>
+                <div class="control-group">
+                    <label>Query Filter (Optional)</label>
+                    <input type="text" id="queryParam" placeholder="e.g. electronics">
+                </div>
+                <div class="control-group">
+                    <button onclick="getItem(this)">
+                        <span>Fetch Item</span>
+                    </button>
+                </div>
+                <div id="item-result" class="result-area empty">Waiting for action...</div>
+            </div>
+
+            <!-- Card 3: Calculator -->
+            <div class="card">
+                <h2>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    Calculator
+                    <span class="badge badge-post" style="margin-left: auto;">POST</span>
+                </h2>
+                <div class="control-group" style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label>Number A</label>
+                        <input type="number" id="num1" placeholder="0">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Number B</label>
+                        <input type="number" id="num2" placeholder="0">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Operation</label>
+                    <select id="operation">
+                        <option value="add">Add (+)</option>
+                        <option value="subtract">Subtract (-)</option>
+                        <option value="multiply">Multiply (×)</option>
+                        <option value="divide">Divide (÷)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <button onclick="calculate(this)">
+                        <span>Calculate Result</span>
+                    </button>
+                </div>
+                <div id="calc-result" class="result-area empty">Waiting for action...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setLoading(btn, isLoading) {
+            if (isLoading) {
+                const originalText = btn.innerText;
+                btn.dataset.originalText = originalText;
+                btn.innerHTML = '<div class="spinner"></div> Processing...';
+                btn.disabled = true;
+            } else {
+                btn.innerHTML = `<span>${btn.dataset.originalText}</span>`;
+                btn.disabled = false;
+            }
+        }
+
+        function showResult(elementId, data, isError = false) {
+            const el = document.getElementById(elementId);
+            el.classList.remove('empty');
+            el.innerHTML = `<div class="fade-in">${JSON.stringify(data, null, 2)}</div>`;
+            el.style.color = isError ? 'var(--error)' : 'var(--text-main)';
+            el.style.borderColor = isError ? 'var(--error)' : 'var(--border)';
+        }
+
+        // 1. Simple GET
+        async function getHello(btn) {
+            setLoading(btn, true);
+            try {
+                // Artificial delay to show loading state
+                await new Promise(r => setTimeout(r, 500));
+                
+                const response = await fetch('/api/hello');
+                const data = await response.json();
+                showResult('hello-result', data);
+            } catch (error) {
+                showResult('hello-result', { error: error.message }, true);
+            } finally {
+                setLoading(btn, false);
+            }
+        }
+
+        // 2. GET with Path and Query Parameters
+        async function getItem(btn) {
+            const id = document.getElementById('itemId').value;
+            if (!id) {
+                alert("Please enter an Item ID");
+                return;
+            }
+            
+            setLoading(btn, true);
+            const q = document.getElementById('queryParam').value;
+            let url = `/api/items/${id}`;
+            if (q) {
+                url += `?q=${q}`;
+            }
+
+            try {
+                await new Promise(r => setTimeout(r, 600));
+                const response = await fetch(url);
+                const data = await response.json();
+                showResult('item-result', data);
+            } catch (error) {
+                showResult('item-result', { error: error.message }, true);
+            } finally {
+                setLoading(btn, false);
+            }
+        }
+
+        // 3. POST with JSON body
+        async function calculate(btn) {
+            const num1 = document.getElementById('num1').value;
+            const num2 = document.getElementById('num2').value;
+            const operation = document.getElementById('operation').value;
+
+            if (num1 === '' || num2 === '') {
+                alert("Please enter both numbers");
+                return;
+            }
+
+            setLoading(btn, true);
+
+            try {
+                await new Promise(r => setTimeout(r, 800));
+                const response = await fetch('/api/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        num1: parseFloat(num1),
+                        num2: parseFloat(num2),
+                        operation: operation
+                    })
+                });
+                const data = await response.json();
+                showResult('calc-result', data);
+            } catch (error) {
+                showResult('calc-result', { error: error.message }, true);
+            } finally {
+                setLoading(btn, false);
+            }
+        }
+    </script>
+</body>
+</html>
